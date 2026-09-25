@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Yeni Profil",
+    "Projects": [
+      {
+        "Path": "stajprojesi uzaktan baglanti\\stajprojesi uzaktan baglanti.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "RemoteDesk.Server\\RemoteDesk.Server.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
