@@ -1,0 +1,8 @@
+**/bin
+**/obj
+**/.vs
+.git
+.test-build
+artifacts
+deploy/.env
+**/*.user

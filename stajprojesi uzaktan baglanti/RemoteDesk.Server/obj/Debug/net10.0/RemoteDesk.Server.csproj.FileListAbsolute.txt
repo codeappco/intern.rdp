@@ -51,3 +51,40 @@ C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\.test-build\control-s
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\.test-build\control-server\RemoteDesk.Server.pdb
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDe.E792BFC2.Up2Date
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\bin\Debug\net10.0\appsettings.Development.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\bin\Debug\net10.0\appsettings.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\bin\Debug\net10.0\RemoteDesk.Server.staticwebassets.endpoints.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\bin\Debug\net10.0\RemoteDesk.Server.exe
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\bin\Debug\net10.0\RemoteDesk.Server.deps.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\bin\Debug\net10.0\RemoteDesk.Server.runtimeconfig.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\bin\Debug\net10.0\RemoteDesk.Server.dll
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\bin\Debug\net10.0\RemoteDesk.Server.pdb
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.AssemblyInfoInputs.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.AssemblyInfo.cs
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.csproj.CoreCompileInputs.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.sourcelink.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\rjimswa.dswa.cache.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\scopedcss\bundle\RemoteDesk.Server.styles.css
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\staticwebassets.build.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\staticwebassets.build.json.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\staticwebassets.development.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\staticwebassets.build.endpoints.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\swae.build.ex.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.dll
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\refint\RemoteDesk.Server.dll
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.pdb
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDesk.Server.genruntimeconfig.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\ref\RemoteDesk.Server.dll
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\appsettings.Development.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\appsettings.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.staticwebassets.endpoints.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.exe
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.deps.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.runtimeconfig.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.dll
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.pdb

@@ -19,7 +19,8 @@ namespace stajprojesi_uzaktan_baglanti
         public MainWindow()
         {
             InitializeComponent();
-            Closed += (_, _) => { kapaniyor = true; OturumuTemizle(); socket.Abort(); };
+            SunucuAdresTextBox.Text = SunucuAyarlari.Yukle();
+            Closed += (_, _) => { kapaniyor = true; baglantiIptal?.Cancel(); OturumuTemizle(); socket.Abort(); };
         }
 
         private System.Net.WebSockets.ClientWebSocket socket = new();
@@ -28,6 +29,7 @@ namespace stajprojesi_uzaktan_baglanti
         private string? onaylananIstek;
         private bool paylasan, kapaniyor;
         private CancellationTokenSource? paylasimIptal;
+        private CancellationTokenSource? baglantiIptal;
         private Window? ekranPenceresi;
         private Image? uzakEkran;
 
@@ -184,16 +186,26 @@ namespace stajprojesi_uzaktan_baglanti
             }
             socket.Dispose();
             socket = new System.Net.WebSockets.ClientWebSocket();
+            socket.Options.KeepAliveInterval = TimeSpan.FromSeconds(20);
+            socket.Options.KeepAliveTimeout = TimeSpan.FromSeconds(20);
             SunucuBaglanButton.IsEnabled = false;
             SunucuAdresTextBox.IsEnabled = false;
             YerelTestCheckBox.IsEnabled = false;
             KendiKodumTextBlock.Text = "Henuz kod olusturulmadi";
             SunucuDurumText.Text = "Baglaniliyor...";
+            using var baglantiZamanAsimi = new CancellationTokenSource(
+                TimeSpan.FromSeconds(RenderSunucu.RenderAdresi(adres) ? 120 : 10));
+            baglantiIptal = baglantiZamanAsimi;
             try
             {
-                using var baglantiZamanAsimi = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                if (RenderSunucu.RenderAdresi(adres))
+                {
+                    SunucuDurumText.Text = "Sunucu hazirlaniyor; ilk baglanti 1-2 dakika surebilir...";
+                    await RenderSunucu.UyandirAsync(adres, baglantiZamanAsimi.Token);
+                }
                 await socket.ConnectAsync(
                     adres, baglantiZamanAsimi.Token);
+                baglantiZamanAsimi.CancelAfter(Timeout.InfiniteTimeSpan);
 
                 var buffer = new byte[4096];
                 using var mesaj = new System.IO.MemoryStream();
@@ -244,6 +256,8 @@ namespace stajprojesi_uzaktan_baglanti
 
                         SunucuDurumText.Text = "Sunucuya bagli";
                         DurumText.Text = "Baglantiya hazir. Ekran paylasimi icin onay gerekir.";
+                        if (!SunucuAyarlari.Kaydet(adres))
+                            DurumText.Text += " Sunucu adresi kaydedilemedi; sonraki acilista yeniden gir.";
                     }
                     else if (tip == "kod_olusturuldu")
                     {
@@ -311,7 +325,7 @@ namespace stajprojesi_uzaktan_baglanti
                 OturumuTemizle();
                 if (!kapaniyor) MessageBox.Show("Baglanti hatasi: " + ex.Message);
             }
-            finally { istemciId = null; OturumuTemizle(); socket.Abort(); SunucuDurumText.Text = "Sunucu bagli degil"; SunucuBaglanButton.IsEnabled = true; SunucuAdresTextBox.IsEnabled = true; YerelTestCheckBox.IsEnabled = true; }
+            finally { baglantiIptal = null; istemciId = null; OturumuTemizle(); socket.Abort(); SunucuDurumText.Text = "Sunucu bagli degil"; SunucuBaglanButton.IsEnabled = true; SunucuAdresTextBox.IsEnabled = true; YerelTestCheckBox.IsEnabled = true; }
         }
 
         private static bool YerelAdres(string host)

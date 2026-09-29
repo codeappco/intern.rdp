@@ -6,7 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
 string sonKod = "Henuz kod olusturulmadi";
-app.UseWebSockets();
+app.UseWebSockets(new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(20),
+    KeepAliveTimeout = TimeSpan.FromSeconds(20)
+});
+app.MapGet("/health", () => Results.Ok(new { durum = "hazir" }));
 var baglantiKodlari =
     new System.Collections.Concurrent.ConcurrentDictionary<string, DateTime>();
 
@@ -52,6 +57,8 @@ async Task MesajGonder(System.Net.WebSockets.WebSocket hedef, object icerik)
     }
 }
 
+if (app.Environment.IsDevelopment())
+{
 app.MapGet("/baglanti-kodu/{kod}", (string kod) =>
 {
     if (baglantiKodlari.TryGetValue(kod, out var bitisZamani)
@@ -62,6 +69,7 @@ app.MapGet("/baglanti-kodu/{kod}", (string kod) =>
 
     return Results.Ok(new { gecerli = false });
 });
+}
 
 app.Map("/ws", async context =>
 {
@@ -75,6 +83,8 @@ app.Map("/ws", async context =>
         await context.WebSockets.AcceptWebSocketAsync();
 
     string istemciId = Guid.NewGuid().ToString();
+    DateTime sonKodIstegi = DateTime.MinValue;
+    DateTime sonBaglantiIstegi = DateTime.MinValue;
     istemciler[istemciId] = socket;
 
     await MesajGonder(socket, new
@@ -177,6 +187,18 @@ app.Map("/ws", async context =>
             }
             if (belge.RootElement.GetProperty("tip").GetString() == "kod_iste")
             {
+                if (DateTime.UtcNow - sonKodIstegi < TimeSpan.FromSeconds(2))
+                {
+                    await MesajGonder(socket, new { tip = "bilgi", mesaj = "Yeni kod icin 2 saniye bekle." });
+                    continue;
+                }
+                sonKodIstegi = DateTime.UtcNow;
+                foreach (var eski in baglantiKodlari.Where(x => x.Value <= DateTime.UtcNow ||
+                    (kodSahipleri.TryGetValue(x.Key, out var sahibi) && sahibi == istemciId)).ToArray())
+                {
+                    baglantiKodlari.TryRemove(eski.Key, out _);
+                    kodSahipleri.TryRemove(eski.Key, out _);
+                }
                 string kod;
 
                 do
@@ -199,6 +221,12 @@ app.Map("/ws", async context =>
             }
             else if (belge.RootElement.GetProperty("tip").GetString() == "baglan")
             {
+                if (DateTime.UtcNow - sonBaglantiIstegi < TimeSpan.FromSeconds(1))
+                {
+                    await MesajGonder(socket, new { tip = "bilgi", mesaj = "Tekrar denemeden once 1 saniye bekle." });
+                    continue;
+                }
+                sonBaglantiIstegi = DateTime.UtcNow;
                 string? kod = belge.RootElement.TryGetProperty("kod", out var kodAlani)
                     && kodAlani.ValueKind == System.Text.Json.JsonValueKind.String
                     ? kodAlani.GetString() : null;
@@ -339,6 +367,11 @@ app.Map("/ws", async context =>
         await mesajKilidi.WaitAsync();
         try
         {
+            foreach (var kod in kodSahipleri.Where(x => x.Value == istemciId).Select(x => x.Key).ToArray())
+            {
+                kodSahipleri.TryRemove(kod, out _);
+                baglantiKodlari.TryRemove(kod, out _);
+            }
             foreach (var id in oturumlar.Where(x => x.Value.Paylasan == istemciId || x.Value.Izleyen == istemciId).Select(x => x.Key).ToArray())
                 await OturumuBitir(id);
         }
@@ -357,6 +390,8 @@ app.Map("/ws", async context =>
 });
 
 
+if (app.Environment.IsDevelopment())
+{
 app.MapPost("/baglanti-kodu", () =>
 {
     string kod = System.Security.Cryptography.RandomNumberGenerator
@@ -376,6 +411,11 @@ app.MapPost("/baglanti-kodu", () =>
 
 
 app.MapGet("/", () => sonKod);
+}
+else
+{
+    app.MapGet("/", () => "RemoteDesk relay hazir.");
+}
 
 
 

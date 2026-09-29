@@ -32,3 +32,23 @@ C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\.test-build\control-d
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\.test-build\control-desktop\stajprojesi uzaktan baglanti.dll
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\.test-build\control-desktop\stajprojesi uzaktan baglanti.pdb
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajproj.5D624D85.Up2Date
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\bin\Debug\net10.0-windows\stajprojesi uzaktan baglanti.exe
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\bin\Debug\net10.0-windows\stajprojesi uzaktan baglanti.deps.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\bin\Debug\net10.0-windows\stajprojesi uzaktan baglanti.runtimeconfig.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\bin\Debug\net10.0-windows\stajprojesi uzaktan baglanti.dll
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\bin\Debug\net10.0-windows\stajprojesi uzaktan baglanti.pdb
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\MainWindow.baml
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\MainWindow.g.cs
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\App.g.cs
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti_MarkupCompile.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.g.resources
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.AssemblyInfoInputs.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.AssemblyInfo.cs
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.csproj.CoreCompileInputs.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.sourcelink.json
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.dll
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\refint\stajprojesi uzaktan baglanti.dll
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.pdb
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\stajprojesi uzaktan baglanti.genruntimeconfig.cache
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\stajprojesi uzaktan baglanti\obj\Debug\net10.0-windows\ref\stajprojesi uzaktan baglanti.dll

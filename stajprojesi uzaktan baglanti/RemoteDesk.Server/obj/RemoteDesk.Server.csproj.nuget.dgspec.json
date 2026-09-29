@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\RemoteDesk.Server.csproj": {}
+    "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\intern.rdp\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\RemoteDesk.Server.csproj": {}
   },
   "projects": {
-    "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\RemoteDesk.Server.csproj": {
+    "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\intern.rdp\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\RemoteDesk.Server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\RemoteDesk.Server.csproj",
+        "projectUniqueName": "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\intern.rdp\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\RemoteDesk.Server.csproj",
         "projectName": "RemoteDesk.Server",
-        "projectPath": "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\RemoteDesk.Server.csproj",
+        "projectPath": "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\intern.rdp\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\RemoteDesk.Server.csproj",
         "packagesPath": "C:\\Users\\krali\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\obj\\",
+        "outputPath": "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\intern.rdp\\stajprojesi uzaktan baglanti\\RemoteDesk.Server\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

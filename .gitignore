@@ -1,0 +1,7 @@
+**/bin/
+**/obj/
+**/.vs/
+.test-build/
+artifacts/
+deploy/.env
+**/*.user
