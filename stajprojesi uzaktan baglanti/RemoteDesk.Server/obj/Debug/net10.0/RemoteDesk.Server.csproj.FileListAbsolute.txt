@@ -88,3 +88,5 @@ C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-buil
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.runtimeconfig.json
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.dll
 C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\.test-build\server\RemoteDesk.Server.pdb
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
+C:\Users\krali\Desktop\agalaryazilim\STAJ\UZAKTAN BAGLANTI\intern.rdp\stajprojesi uzaktan baglanti\RemoteDesk.Server\obj\Debug\net10.0\RemoteDe.E792BFC2.Up2Date

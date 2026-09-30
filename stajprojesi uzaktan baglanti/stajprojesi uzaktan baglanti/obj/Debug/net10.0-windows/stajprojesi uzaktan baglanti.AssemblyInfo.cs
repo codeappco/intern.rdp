@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("stajprojesi uzaktan baglanti")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+117f566c0ec6ea1c0fce44e0500d894ddc651c2f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7f42871876da98263ea295097f9efbdd50c96153")]
 [assembly: System.Reflection.AssemblyProductAttribute("stajprojesi uzaktan baglanti")]
 [assembly: System.Reflection.AssemblyTitleAttribute("stajprojesi uzaktan baglanti")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
