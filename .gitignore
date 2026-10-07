@@ -1,0 +1,10 @@
+# Visual Studio local caches and user settings
+.vs/
+*.user
+*.suo
+
+# Generated build and publish output
+bin/
+obj/
+artifacts/
+.test-build/
