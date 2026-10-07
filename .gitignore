@@ -6,5 +6,4 @@
 # Generated build and publish output
 bin/
 obj/
-artifacts/
 .test-build/
