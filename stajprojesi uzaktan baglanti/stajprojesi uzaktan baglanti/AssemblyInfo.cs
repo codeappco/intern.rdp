@@ -1,4 +1,5 @@
 using System.Windows;
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("WpfSecurity.Tests")]
 
 [assembly: ThemeInfo(
     ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("stajprojesi uzaktan baglanti")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+78d41d3de777ecd6c478cfb34672b4f8efcb1115")]
 [assembly: System.Reflection.AssemblyProductAttribute("stajprojesi uzaktan baglanti")]
 [assembly: System.Reflection.AssemblyTitleAttribute("stajprojesi uzaktan baglanti")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

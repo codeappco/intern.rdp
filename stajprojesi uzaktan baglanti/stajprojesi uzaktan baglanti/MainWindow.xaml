@@ -4,7 +4,7 @@
         Title="RemoteDesk | Uzaktan Baglanti" Height="760" Width="940"
 
         MinHeight="740" MinWidth="820" WindowStartupLocation="CenterScreen"
-        Background="#F4F6FA" FontFamily="Segoe UI" Foreground="#17243B">
+        Loaded="UygulamaYuklendi" Background="#F4F6FA" FontFamily="Segoe UI" Foreground="#17243B">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Background" Value="#315DE6"/>
@@ -35,7 +35,7 @@
             <Setter Property="LineHeight" Value="21"/>
         </Style>
     </Window.Resources>
-    <Grid Margin="36,28">
+    <TabControl x:Name="AnaSekmeler" Margin="20" Background="#F4F6FA" BorderThickness="0"><TabItem Header="Baglanti"><ScrollViewer VerticalScrollBarVisibility="Auto"><Grid Margin="16,20" MinHeight="640">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -44,13 +44,16 @@
         </Grid.RowDefinitions>
         <DockPanel>
             <Border DockPanel.Dock="Right" Background="#E7EBF2" CornerRadius="12" Padding="12,6" VerticalAlignment="Center">
-                <TextBlock x:Name="SunucuDurumText" Text="Sunucu bagli degil" Foreground="#657187" FontSize="12"/>
+                <StackPanel>
+                    <TextBlock x:Name="SunucuDurumText" Text="Sunucu bagli degil" Foreground="#B42318" FontSize="12"/>
+                    <TextBlock x:Name="PingText" Text="Ping: -- / -- ms" Foreground="#657187" FontSize="11"/>
+                </StackPanel>
             </Border>
             <StackPanel Orientation="Horizontal">
                 <Border Background="#315DE6" CornerRadius="10" Width="40" Height="40" Margin="0,0,12,0">
                     <TextBlock Text="R" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <TextBlock Text="RemoteDesk" FontSize="23" FontWeight="Bold" VerticalAlignment="Center"/>
+                <StackPanel VerticalAlignment="Center"><TextBlock Text="RemoteDesk" FontSize="23" FontWeight="Bold"/><TextBlock x:Name="KimlikText" Foreground="#69768B" FontSize="12"/></StackPanel>
             </StackPanel>
         </DockPanel>
         <StackPanel Grid.Row="1" Margin="0,30,0,24">
@@ -60,7 +63,7 @@
             <DockPanel><Button x:Name="SunucuBaglanButton" DockPanel.Dock="Right" Content="Sunucuya baglan" Click="PencereYuklendi" Margin="10,0,0,0"/><TextBox x:Name="SunucuAdresTextBox" Text="wss://localhost:7007/ws" VerticalContentAlignment="Center" Padding="10" FontSize="15"/></DockPanel>
             <CheckBox x:Name="YerelTestCheckBox" Content="Sifresiz yerel test baglantisina izin ver (yalnizca guvendigin ozel agda)" Margin="0,8,0,0"/>
         </StackPanel>
-        <Grid Grid.Row="2">
+        <Grid x:Name="BaglantiKartlari" Grid.Row="2">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <Border Background="White" BorderBrush="#E1E6EF" BorderThickness="1" CornerRadius="16" Padding="26">
                 <Grid>
@@ -75,6 +78,7 @@
                         <Border Background="#F4F6FA" CornerRadius="9" Padding="14" MinHeight="54">
                             <TextBlock x:Name="KendiKodumTextBlock" Text="Henuz kod olusturulmadi" Foreground="#69768B" FontSize="14" VerticalAlignment="Center" TextWrapping="Wrap"/>
                         </Border>
+                        <TextBlock x:Name="KodSureText" Margin="0,8,0,0" Style="{StaticResource Hint}"/>
                     </StackPanel>
                     <Button Grid.Row="2" Content="Baglanti Al" Click="BaglantiAl_Click"/>
                 </Grid>
@@ -95,9 +99,48 @@
                 </Grid>
             </Border>
         </Grid>
-        <StackPanel Grid.Row="3" Margin="0,12,0,0"><TextBlock x:Name="DurumText" Text="Sunucu adresini girip baglan." Style="{StaticResource Hint}" HorizontalAlignment="Center"/><Button x:Name="KontrolButton" Content="Fare ve klavye kontrolune izin ver" Click="Kontrol_Click" Visibility="Collapsed" Height="36" Margin="0,8,0,0"/><Button x:Name="DurdurButton" Content="Paylasimi / izlemeyi durdur" Click="Durdur_Click" Visibility="Collapsed" Background="#B42318" Height="36" Margin="0,8,0,0"/></StackPanel>
-    </Grid>
+        <Border x:Name="AktifOturumPanel" Grid.Row="2" Visibility="Collapsed" Background="White" CornerRadius="16" Padding="26"><StackPanel><TextBlock Text="Aktif baglanti" FontSize="23" FontWeight="SemiBold"/><TextBlock x:Name="BaglananText" Margin="0,16,0,0" Style="{StaticResource Hint}"/><TextBlock x:Name="FpsText" Margin="0,12,0,0" Style="{StaticResource Hint}"/><ContentControl x:Name="RtcPaylasimAlani" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed" Height="340" Margin="0,16,0,0"/></StackPanel></Border>
+        <StackPanel Grid.Row="3" Margin="0,12,0,0"><TextBlock x:Name="DurumText" Text="Sunucu adresini girip baglan." Style="{StaticResource Hint}" HorizontalAlignment="Center"/><Button x:Name="KontrolButton" Content="Fare ve klavye kontrolune izin ver" Click="Kontrol_Click" Visibility="Collapsed" Height="36" Margin="0,8,0,0"/><Button x:Name="DurdurButton" Content="Baglantiyi sonlandir" Click="Durdur_Click" Visibility="Collapsed" Background="#B42318" Height="36" Margin="0,8,0,0"/></StackPanel>
+    </Grid></ScrollViewer></TabItem>
+    <TabItem Header="Ayarlar">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="30" MaxWidth="640" HorizontalAlignment="Left">
+                <TextBlock Text="Ayarlar" FontSize="27" FontWeight="SemiBold"/>
+                <TextBlock Text="Kimlik ve ekran paylasimi tercihlerin." Style="{StaticResource Hint}" Margin="0,8,0,24"/>
+                <Label Content="Gorunen ad" Target="{Binding ElementName=KimlikAdiTextBox}"/>
+                <TextBox x:Name="KimlikAdiTextBox" MaxLength="32" FontSize="16" Padding="12"/>
+                <TextBlock Text="Bos birakirsan otomatik ad atanir. Bu ad baglanti isteginde gosterilir; dogrulanmis kimlik degildir." Style="{StaticResource Hint}" Margin="0,8,0,24"/>
+                <Label Content="Ekran aktarim yontemi (kendi ekranini paylasirken)"/>
+                <ComboBox x:Name="AktarimCombo" Padding="10" FontSize="16"><ComboBoxItem Content="JPEG / mevcut sifreli aktarim"/><ComboBoxItem Content="H.264 + WebRTC / sifreli video"/></ComboBox>
+                <TextBlock Text="WebRTC icin iki bilgisayarda da yeni surum ve Microsoft Edge WebView2 Runtime gerekir. Paylasan kisinin secimi kullanilir. Ana ekrandaki paylasim dugmesiyle acilan Windows ekran secicisinde birincil monitoru secin. Baglanti kurulamazsa JPEG secip yeniden baglanabilirsiniz." Style="{StaticResource Hint}" Margin="0,8,0,12"/>
+                <Expander Header="WebRTC ag ayarlari (STUN / istege bagli TURN)" Margin="0,0,0,16"><StackPanel>
+                    <TextBlock Text="STUN baglanti kurmaya yardimci olur; goruntu tasimaz. Varsayilan Google STUN sunucusudur. Bazi aglarda iki bilgisayarda da TURN bilgisi gerekir. Render Web Service bir TURN sunucusu degildir." Style="{StaticResource Hint}" Margin="0,8"/>
+                    <Label Content="STUN adresi (bos: yalniz yerel adaylar)"/><TextBox x:Name="StunTextBox" Padding="8"/>
+                    <Label Content="TURN adresi (istege bagli)"/><TextBox x:Name="TurnTextBox" Padding="8"/>
+                    <Label Content="TURN kullanici adi"/><TextBox x:Name="TurnUserTextBox" Padding="8"/>
+                    <Label Content="TURN parolasi (diske kaydedilmez)"/><PasswordBox x:Name="TurnPasswordBox" Padding="8"/>
+                </StackPanel></Expander>
+                <Label Content="Maksimum FPS (JPEG ve H.264)" Target="{Binding ElementName=FpsCombo}"/>
+                <ComboBox x:Name="FpsCombo" Padding="10" FontSize="16" SelectedIndex="0">
+                    <ComboBoxItem Content="15 FPS" Tag="15"/><ComboBoxItem Content="30 FPS" Tag="30"/><ComboBoxItem Content="60 FPS" Tag="60"/>
+                </ComboBox>
+                <Label Content="Goruntu cozunurlugu / kalite (JPEG ve H.264)" Target="{Binding ElementName=CozunurlukCombo}" Margin="0,16,0,0"/>
+                <ComboBox x:Name="CozunurlukCombo" Padding="10" FontSize="16" SelectedIndex="1">
+                    <ComboBoxItem Content="480p (en fazla 854 x 480)" Tag="480"/>
+                    <ComboBoxItem Content="720p (en fazla 1280 x 720)" Tag="720"/>
+                    <ComboBoxItem Content="1080p (en fazla 1920 x 1080)" Tag="1080"/>
+                </ComboBox>
+                <TextBlock Text="Bu secimler kendi ekranini paylasirken uygulanir. En-boy orani korunur; kucuk ekran buyutulmez. Secilen FPS ust sinir ve hedeftir; alt sinir yoktur. H.264 secilen cozunurlugu korumaya oncelik verir; sabit bitrate siniri olmadan agin kapasitesine uyarlanir. Ag ve bilgisayar hizina gore FPS daha dusuk olabilir. Yuksek FPS ve cozunurluk daha fazla veri kullanir." Style="{StaticResource Hint}" Margin="0,16,0,24"/>
+                <CheckBox x:Name="AdaptifGoruntuCheckBox" Content="Akicilik icin goruntu kalitesini otomatik ayarla" Margin="0,0,0,8"/>
+                <TextBlock Text="Yavas baglantida JPEG kalitesi ve gerekirse cozunurluk 480p seviyesine kadar azalir. FPS seciminiz degismez. Kapattiginizda secilen cozunurluk sabit kullanilir." Style="{StaticResource Hint}" Margin="0,0,0,20"/>
+                <CheckBox x:Name="AnahtarDogrulamaCheckBox" Content="Baglantida guvenlik kodunu elle dogrula" Margin="0,0,0,8"/><TextBlock Text="Kapaliyken sifreli baglanti sunucuya guvenir. Acikken iki bilgisayarin anahtari bagimsiz bir kanaldan karsilastirilir." Style="{StaticResource Hint}" Margin="0,0,0,20"/>
+                <Button Content="Ayarlari kaydet" Click="AyarlariKaydet_Click" HorizontalAlignment="Left"/>
+                <TextBlock x:Name="AyarDurumText" Style="{StaticResource Hint}" Margin="0,16,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+    </TabItem></TabControl>
 </Window>
+
 
 
 

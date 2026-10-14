@@ -15,6 +15,10 @@ internal sealed class UzakGirdi
     public static bool IsInjected => unchecked((uint)GetMessageExtraInfo().ToInt64()) == Marker;
     private readonly HashSet<int> keys = new();
     private readonly HashSet<int> buttons = new();
+    private readonly Action<uint, int, int, uint>? mouseSender;
+    private readonly Action<int, bool>? keySender;
+    internal UzakGirdi(Action<uint, int, int, uint>? mouseSender = null, Action<int, bool>? keySender = null)
+    { this.mouseSender = mouseSender; this.keySender = keySender; }
     private static void Send(Input input)
     {
         if (input.type == 0) input.payload.mouse.extra = new UIntPtr(Marker);
@@ -22,9 +26,17 @@ internal sealed class UzakGirdi
         if (SendInput(1, new[] { input }, Marshal.SizeOf<Input>()) != 1)
             throw new InvalidOperationException("Windows girdiyi uygulayamadi. Yonetici pencereleri kontrol edilemeyebilir.");
     }
-    private static void MouseEvent(uint flags, int x = 0, int y = 0, uint data = 0) => Send(new Input { payload = new Payload { mouse = new Mouse { flags = flags, x = x, y = y, data = data } } });
+    private void MouseEvent(uint flags, int x = 0, int y = 0, uint data = 0)
+    {
+        if (mouseSender != null) mouseSender(flags, x, y, data);
+        else Send(new Input { payload = new Payload { mouse = new Mouse { flags = flags, x = x, y = y, data = data } } });
+    }
     private static bool Extended(int key) => key is 33 or 34 or 35 or 36 or 37 or 38 or 39 or 40 or 45 or 46 or 91 or 92 or 111 or 163 or 165;
-    private static void KeyEvent(int key, bool down) => Send(new Input { type = 1, payload = new Payload { keyboard = new Keyboard { key = (ushort)key, flags = (down ? 0u : 2u) | (Extended(key) ? 1u : 0u) } } });
+    private void KeyEvent(int key, bool down)
+    {
+        if (keySender != null) keySender(key, down);
+        else Send(new Input { type = 1, payload = new Payload { keyboard = new Keyboard { key = (ushort)key, flags = (down ? 0u : 2u) | (Extended(key) ? 1u : 0u) } } });
+    }
     public void Apply(JsonElement message)
     {
         string? action = message.GetProperty("eylem").GetString();
@@ -41,26 +53,35 @@ internal sealed class UzakGirdi
         if (action is not ("hareket" or "dugme" or "tekerlek")) return;
         double x = message.GetProperty("x").GetDouble(), y = message.GetProperty("y").GetDouble();
         if (!double.IsFinite(x) || !double.IsFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) return;
+        // Validate the complete command before any Windows input side effect.
+        int button = 0, delta = 0;
+        bool downButton = false;
+        if (action == "dugme")
+        {
+            button = message.GetProperty("dugme").GetInt32();
+            downButton = message.GetProperty("basili").GetBoolean();
+            if (button is < 0 or > 2) return;
+        }
+        if (action == "tekerlek")
+        {
+            delta = message.GetProperty("delta").GetInt32();
+            if (delta is < -1200 or > 1200) return;
+        }
         MouseEvent(0x8001, (int)Math.Round(x * 65535), (int)Math.Round(y * 65535));
         if (action == "dugme")
         {
-            int button = message.GetProperty("dugme").GetInt32();
-            bool down = message.GetProperty("basili").GetBoolean();
-            if (button is < 0 or > 2) return;
             uint flag = button == 0 ? 2u : button == 1 ? 8u : 32u;
-            if (down) { MouseEvent(flag); buttons.Add(button); }
+            if (downButton) { MouseEvent(flag); buttons.Add(button); }
             else if (buttons.Contains(button)) { MouseEvent(flag * 2); buttons.Remove(button); }
         }
         if (action == "tekerlek")
         {
-            int delta = message.GetProperty("delta").GetInt32();
-            if (delta is >= -1200 and <= 1200) MouseEvent(0x800, data: unchecked((uint)delta));
+            MouseEvent(0x800, data: unchecked((uint)delta));
         }
     }
     public void Release()
     {
-        foreach (int key in keys.ToArray()) { try { KeyEvent(key, false); } catch (InvalidOperationException) { } }
-        foreach (int button in buttons.ToArray()) { try { MouseEvent(button == 0 ? 4u : button == 1 ? 16u : 64u); } catch (InvalidOperationException) { } }
-        keys.Clear(); buttons.Clear();
+        foreach (int key in keys.ToArray()) { try { KeyEvent(key, false); keys.Remove(key); } catch (InvalidOperationException) { } }
+        foreach (int button in buttons.ToArray()) { try { MouseEvent(button == 0 ? 4u : button == 1 ? 16u : 64u); buttons.Remove(button); } catch (InvalidOperationException) { } }
     }
 }

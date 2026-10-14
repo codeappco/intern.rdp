@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "FvQxzMIPs0k=",
+  "dgSpecHash": "4NpZt+c7t+w=",
   "success": true,
-  "projectFilePath": "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\stajprojesi uzaktan baglanti\\stajprojesi uzaktan baglanti\\stajprojesi uzaktan baglanti.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "C:\\Users\\krali\\Desktop\\agalaryazilim\\STAJ\\UZAKTAN BAGLANTI\\intern.rdp\\stajprojesi uzaktan baglanti\\stajprojesi uzaktan baglanti\\stajprojesi uzaktan baglanti.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\krali\\.nuget\\packages\\microsoft.web.webview2\\1.0.3537.50\\microsoft.web.webview2.1.0.3537.50.nupkg.sha512",
+    "C:\\Users\\krali\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.17763.57\\microsoft.windows.sdk.net.ref.10.0.17763.57.nupkg.sha512"
+  ],
   "logs": []
 }

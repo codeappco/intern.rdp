@@ -19,20 +19,61 @@ namespace stajprojesi_uzaktan_baglanti
         public MainWindow()
         {
             InitializeComponent();
-            Closed += (_, _) => { kapaniyor = true; OturumuTemizle(); socket.Abort(); };
+            SunucuAyariniYukle();
+            AyarlariYukle();
+            kodSayaci.Tick += (_, _) => KodSuresiniGuncelle();
+            Closed += (_, _) => { kapaniyor = true; kodSayaci.Stop(); pingIptal?.Cancel(); OturumuTemizle(); socket.Abort(); };
         }
 
-        private System.Net.WebSockets.ClientWebSocket socket = new();
+        private void SunucuAyariniYukle()
+        {
+            // Single-file extraction may put assemblies in a temporary directory.
+            // Configuration belongs beside the executable the user launched.
+            string klasor = System.IO.Path.GetDirectoryName(Environment.ProcessPath)
+                ?? AppContext.BaseDirectory;
+            string dosya = System.IO.Path.Combine(klasor, "sunucu.json");
+            SunucuAdresTextBox.Text = "";
+            try
+            {
+                using var belge = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(dosya));
+                string? deger = belge.RootElement.GetProperty("SunucuAdresi").GetString();
+                if (!Uri.TryCreate(deger, UriKind.Absolute, out var adres) ||
+                    (adres.Scheme != "wss" && adres.Scheme != "ws") ||
+                    adres.UserInfo.Length > 0 || adres.Fragment.Length > 0)
+                    throw new FormatException("Gecersiz sunucu adresi.");
+                SunucuAdresTextBox.Text = adres.AbsoluteUri;
+            }
+            catch (Exception ex) when (ex is System.IO.IOException || ex is UnauthorizedAccessException ||
+                ex is System.Text.Json.JsonException || ex is KeyNotFoundException ||
+                ex is InvalidOperationException || ex is FormatException)
+            {
+                DurumText.Text = "sunucu.json okunamadi veya gecersiz. Sunucu adresini elle girin.";
+            }
+        }
+
+        private ResponsiveWebSocket socket = new();
         private string? istemciId;
         private string? oturumId;
         private string? onaylananIstek;
         private bool paylasan, kapaniyor;
+        private CancellationTokenSource? pingIptal;
+        private long sonPingGonderim;
         private CancellationTokenSource? paylasimIptal;
         private Window? ekranPenceresi;
         private Image? uzakEkran;
 
         private void OturumuTemizle()
         {
+            RtcTemizle();
+            bekleyenKareSayisi = 0; kareOnayiDestegi = false; kareTurMs = 0;
+            BaglantiKartlari.Visibility = Visibility.Visible;
+            AktifOturumPanel.Visibility = Visibility.Collapsed;
+            Title = "RemoteDesk | Uzaktan Baglanti";
+            secureTimeout?.Cancel(); secureTimeout?.Dispose(); secureTimeout = null;
+            secureSession?.Dispose(); secureSession = null;
+            peerVerification?.Close(); peerVerification = null;
+            secureActivated = false;
+            var dialog = verificationDialog; verificationDialog = null; dialog?.Close();
             KontrolTemizle();
             oturumId = null;
             onaylananIstek = null;
@@ -40,6 +81,7 @@ namespace stajprojesi_uzaktan_baglanti
             paylasimIptal = null;
             var pencere = ekranPenceresi;
             ekranPenceresi = null;
+            if (uzakEkran != null) uzakEkran.Source = null;
             uzakEkran = null;
             pencere?.Close();
             DurdurButton.Visibility = Visibility.Collapsed;
@@ -59,15 +101,33 @@ namespace stajprojesi_uzaktan_baglanti
 
         private async Task EkranGonder(string id, CancellationTokenSource iptal)
         {
+            var profile = new StreamImageProfile();
             try
             {
                 while (!iptal.IsCancellationRequested && oturumId == id)
                 {
-                    byte[] jpeg = await Task.Run(EkranYakala.Jpeg, iptal.Token);
+                    var frameStart = System.Diagnostics.Stopwatch.StartNew();
+                    var settings = preferences;
+                    profile.Configure(settings.Height, settings.AdaptiveImage);
+                    int captureHeight = profile.Height, captureQuality = profile.Quality;
+                    etkinGoruntu = $"{captureHeight}p / JPEG kalite {captureQuality}";
+                    byte[] jpeg = await Task.Run(() => EkranYakala.Jpeg(captureHeight, captureQuality), iptal.Token);
+                    yakalamaMs = frameStart.Elapsed.TotalMilliseconds;
+                    sonKareBayt = jpeg.Length;
+                    try
+                    {
                     iptal.Token.ThrowIfCancellationRequested();
                     if (oturumId != id) break;
-                    await MesajGonderAsync(new { tip = "ekran", oturumId = id, jpeg = Convert.ToBase64String(jpeg) });
-                    await Task.Delay(200, iptal.Token);
+                    if (kareOnayiDestegi) bekleyenKareSayisi++;
+                    var sendWatch = System.Diagnostics.Stopwatch.StartNew();
+                    await SecureSend(new { tip = "ekran", oturumId = id, gonderimZamani = Environment.TickCount64, jpeg = Convert.ToBase64String(jpeg) });
+                    gonderimMs = sendWatch.Elapsed.TotalMilliseconds;
+                    profile.Observe(jpeg.Length, gonderimMs, yakalamaMs, settings.Fps);
+                    if (!kareOnayiDestegi) FpsGuncelle(settings.Fps);
+                    }
+                    finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(jpeg); }
+                    var remaining = TimeSpan.FromSeconds(1.0 / settings.Fps) - frameStart.Elapsed;
+                    if (remaining > TimeSpan.Zero) await Task.Delay(remaining, iptal.Token);
                 }
             }
             catch (OperationCanceledException) { }
@@ -82,16 +142,39 @@ namespace stajprojesi_uzaktan_baglanti
             finally { iptal.Dispose(); }
         }
 
+        private async Task PingDongusu(CancellationToken token)
+        {
+            try
+            {
+                using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+                while (await timer.WaitForNextTickAsync(token))
+                {
+                    long zaman = Environment.TickCount64;
+                    sonPingGonderim = zaman;
+                    await MesajGonderAsync(new { tip = "ping", zaman });
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception) { }
+        }
+
         private void OturumBaslat(string id, string rol)
         {
-            if (rol == "paylasan" && onaylananIstek != id)
-                throw new InvalidOperationException("Onaylanmamis ekran paylasimi.");
-            OturumuTemizle();
-            oturumId = id;
-            paylasan = rol == "paylasan";
+            if (!secureStarted || oturumId != id) throw new InvalidOperationException("Guvenli oturum hazir degil.");
+            BaglantiKartlari.Visibility = Visibility.Collapsed;
+            AktifOturumPanel.Visibility = Visibility.Visible;
+            BaglananText.Text = paylasan ? "Baglanan (gorunen ad, dogrulanmamis): " + baglananBilgisi : "Karsi bilgisayarin ekrani izleniyor.";
+            fpsOlcum.Restart(); fpsKare = 0;
+            KodSayaciniTemizle();
             DurdurButton.Visibility = Visibility.Visible;
             DurumText.Text = paylasan ? "Birincil ekranin paylasiliyor." : "Karsi ekran bekleniyor...";
             Title = "RemoteDesk | " + (paylasan ? "Ekran paylasiliyor" : "Ekran izleniyor");
+            rtcSession = (paylasan ? localVideoTransport : peerVideoTransport) == "webrtc";
+            if (rtcSession)
+            {
+                rtcInitialization = RtcBaslat(id);
+                return;
+            }
             if (paylasan)
             {
                 KontrolButton.Visibility = Visibility.Visible;
@@ -109,7 +192,7 @@ namespace stajprojesi_uzaktan_baglanti
         }
         private readonly System.Threading.SemaphoreSlim gonderimKilidi = new(1, 1);
 
-        private bool BaglantiOnayiAl(string isteyenId)
+        private bool BaglantiOnayiAl(string isteyenId, string isteyenAd)
         {
             var pencere = new Window
             {
@@ -127,8 +210,8 @@ namespace stajprojesi_uzaktan_baglanti
             });
             alan.Children.Add(new TextBlock
             {
-                Text = "Isteyen istemci: " + isteyenId +
-                    "\n\nCevap suresi: 1 dakika.\nKabul edersen birincil ekraninin tamami karsi tarafa gosterilir. Paylasimi istedigin zaman durdurabilirsin. Fare ve klavye kontrolu verilmez.",
+                Text = "Gorunen ad (dogrulanmamis): " + isteyenAd + "\nIsteyen istemci: " + isteyenId +
+                    "\n\nCevap suresi: 1 dakika.\nKabul edince sifreli baglanti kurulur ve birincil ekraninin tamami karsi tarafa gosterilir. Ayarlarda etkinse guvenlik kodu da dogrulanir. Paylasimi istedigin zaman durdurabilirsin. Fare ve klavye kontrolu verilmez.",
                 Margin = new Thickness(0, 16, 0, 20), TextWrapping = TextWrapping.Wrap
             });
             var dugmeler = new StackPanel
@@ -183,12 +266,14 @@ namespace stajprojesi_uzaktan_baglanti
                 return;
             }
             socket.Dispose();
-            socket = new System.Net.WebSockets.ClientWebSocket();
+            socket = new ResponsiveWebSocket();
             SunucuBaglanButton.IsEnabled = false;
             SunucuAdresTextBox.IsEnabled = false;
             YerelTestCheckBox.IsEnabled = false;
             KendiKodumTextBlock.Text = "Henuz kod olusturulmadi";
             SunucuDurumText.Text = "Baglaniliyor...";
+            SunucuDurumText.Foreground = Brushes.DarkOrange;
+            KodSayaciniTemizle();
             try
             {
                 using var baglantiZamanAsimi = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -243,44 +328,60 @@ namespace stajprojesi_uzaktan_baglanti
                             .GetProperty("istemciId").GetString();
 
                         SunucuDurumText.Text = "Sunucuya bagli";
+                        SunucuDurumText.Foreground = Brushes.ForestGreen;
                         DurumText.Text = "Baglantiya hazir. Ekran paylasimi icin onay gerekir.";
+                        pingIptal = new CancellationTokenSource();
+                        _ = PingDongusu(pingIptal.Token);
+                    }
+                    else if (tip == "pong")
+                    {
+                        long gonderim = belge.RootElement.GetProperty("zaman").GetInt64();
+                        long simdi = Environment.TickCount64;
+                        if (gonderim <= simdi && simdi - gonderim < 60000)
+                        {
+                            int ms = (int)(simdi - gonderim);
+                            PingText.Text = $"Ping: gonderilen {ms} ms / alinan {ms} ms";
+                        }
                     }
                     else if (tip == "kod_olusturuldu")
                     {
                         KendiKodumTextBlock.Text = belge.RootElement
                             .GetProperty("kod").GetString();
+                        kodBitis = belge.RootElement.TryGetProperty("gecerlilikSaniye", out var sure) ? Environment.TickCount64 + sure.GetInt32() * 1000L : null;
+                        KodSuresiniGuncelle();
+                        if (kodBitis != null) kodSayaci.Start();
                     }
                     else if (tip == "baglanti_istegi")
                     {
                         string? isteyenId = belge.RootElement.GetProperty("isteyenId").GetString();
                         string? istekId = belge.RootElement.GetProperty("istekId").GetString();
-                        bool kabul = BaglantiOnayiAl(isteyenId ?? "");
+                        string ad = belge.RootElement.TryGetProperty("isteyenAd", out var adAlani) && adAlani.ValueKind == System.Text.Json.JsonValueKind.String ? adAlani.GetString() ?? "" : "";
+                        var kimlik = new UserSettings { DisplayName = ad.Length == 0 ? "RemoteDesk-" + (isteyenId ?? "bilinmiyor")[..Math.Min(8, (isteyenId ?? "bilinmiyor").Length)] : ad };
+                        kimlik.Normalize();
+                        bool kabul = BaglantiOnayiAl(isteyenId ?? "", kimlik.DisplayName);
                         onaylananIstek = kabul ? istekId : null;
+                        if (kabul) baglananBilgisi = kimlik.DisplayName + "\nIstemci: " + isteyenId;
                         await MesajGonderAsync(new { tip = "baglanti_cevabi", istekId, kabul });
                     }
                     else if (tip == "kontrol_izni" || tip == "girdi")
                     {
-                        KontrolMesaji(belge.RootElement);
+                        throw new System.Security.Cryptography.CryptographicException("Sifresiz kontrol mesaji reddedildi.");
                     }
                     else if (tip == "oturum_basladi")
                     {
-                        OturumBaslat(belge.RootElement.GetProperty("oturumId").GetString()!, belge.RootElement.GetProperty("rol").GetString()!);
+                        await SecureStart(belge.RootElement.GetProperty("oturumId").GetString()!, belge.RootElement.GetProperty("rol").GetString()!);
                     }
                     else if (tip == "oturum_bitti")
                     {
                         if (oturumId == belge.RootElement.GetProperty("oturumId").GetString()) OturumuTemizle();
                     }
-                    else if (tip == "ekran" && !paylasan && uzakEkran != null && oturumId == belge.RootElement.GetProperty("oturumId").GetString())
+                    else if (tip == "e2ee_anahtar" || tip == "sifreli")
                     {
-                        using var veri = new System.IO.MemoryStream(Convert.FromBase64String(belge.RootElement.GetProperty("jpeg").GetString()!));
-                        var bitmap = new BitmapImage();
-                        bitmap.BeginInit();
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.StreamSource = veri;
-                        bitmap.EndInit();
-                        bitmap.Freeze();
-                        uzakEkran.Source = bitmap;
-                        DurumText.Text = "Karsi ekran goruntuleniyor.";
+                        await SecureMessage(belge.RootElement);
+                    }
+                    else if (tip == "ekran")
+                    {
+                        throw new System.Security.Cryptography.CryptographicException("Sifresiz ekran reddedildi.");
                     }
                     else if (tip == "istek_gonderildi")
                     {
@@ -296,7 +397,7 @@ namespace stajprojesi_uzaktan_baglanti
                             "ret" => "Karsi taraf istegi reddetti.",
                             _ => "Istegin suresi doldu. Tekrar istek gonder."
                         };
-                        MessageBox.Show(this, sonucMesaji, "Baglanti cevabi");
+                        DurumText.Text = sonucMesaji;
                     }
                     else if (tip == "bilgi")
                     {
@@ -311,7 +412,7 @@ namespace stajprojesi_uzaktan_baglanti
                 OturumuTemizle();
                 if (!kapaniyor) MessageBox.Show("Baglanti hatasi: " + ex.Message);
             }
-            finally { istemciId = null; OturumuTemizle(); socket.Abort(); SunucuDurumText.Text = "Sunucu bagli degil"; SunucuBaglanButton.IsEnabled = true; SunucuAdresTextBox.IsEnabled = true; YerelTestCheckBox.IsEnabled = true; }
+            finally { pingIptal?.Cancel(); pingIptal?.Dispose(); pingIptal = null; PingText.Text = "Ping: -- / -- ms"; istemciId = null; OturumuTemizle(); socket.Abort(); SunucuDurumText.Text = "Sunucu bagli degil"; SunucuDurumText.Foreground = Brushes.Firebrick; KodSayaciniTemizle(); SunucuBaglanButton.IsEnabled = true; SunucuAdresTextBox.IsEnabled = true; YerelTestCheckBox.IsEnabled = true; }
         }
 
         private static bool YerelAdres(string host)
@@ -363,7 +464,7 @@ namespace stajprojesi_uzaktan_baglanti
 
             try
             {
-                await MesajGonderAsync(new { tip = "baglan", kod });
+                await MesajGonderAsync(new { tip = "baglan", kod, ad = preferences.DisplayName });
             }
             catch (Exception)
             {

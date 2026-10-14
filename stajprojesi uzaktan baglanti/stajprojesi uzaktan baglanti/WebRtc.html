@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; media-src blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<style>html,body{margin:0;width:100%;height:100%;background:#101827;color:#eef2ff;font:16px 'Segoe UI',sans-serif}#panel{padding:32px;box-sizing:border-box}button{background:#315de6;color:white;border:0;border-radius:8px;padding:14px 22px;font:inherit;cursor:pointer}button:disabled{opacity:.5}p{line-height:1.6;max-width:760px}video{width:100%;height:100%;object-fit:contain;outline:0;display:none}#status{color:#bac8df}#hint{position:absolute;bottom:8px;left:12px;background:#101827cc;padding:6px;pointer-events:none;font-size:12px;display:none}</style></head>
+<body><section id="panel"><h2>H.264 + WebRTC</h2><p id="status">Sifreli oturum hazirlaniyor...</p><button id="share" hidden>Birincil ekrani sec ve paylas</button><p id="help" hidden>Windows ekran secicisinde birincil monitorunuzu secin. Pencere veya tarayici sekmesi yerine tum ekrani secmeniz gerekir. Paylasimi ana uygulamadaki Baglantiyi sonlandir dugmesiyle durdurabilirsiniz.</p></section><video id="video" autoplay playsinline muted tabindex="0"></video><div id="hint">Salt goruntuleme</div>
+<script>
+'use strict';
+const video=document.getElementById('video'), panel=document.getElementById('panel'), statusText=document.getElementById('status'), share=document.getElementById('share'), hint=document.getElementById('hint');
+let pc=null, stream=null, config=null, stopped=false, ready=false, permission=false, inputActive=false;
+let controlChannel=null, moveChannel=null, dataSequence=0, controlReady=false, heartbeat=null, lastControlSeen=0;
+let candidates=[], operation=Promise.resolve(), deadline=null, disconnectDeadline=null, statsTimer=null, previousStats=null, statsBusy=false;
+const send=value=>window.chrome.webview.postMessage(value);
+function stop(){if(stopped)return;stopped=true;clearTimeout(deadline);clearTimeout(disconnectDeadline);clearInterval(statsTimer);clearInterval(heartbeat);if(controlChannel)controlChannel.close();if(moveChannel)moveChannel.close();if(stream)stream.getTracks().forEach(t=>t.stop());if(pc)pc.close();video.srcObject=null;}
+function fail(error){if(stopped)return;const message=String(error?.message||error).slice(0,400);statusText.textContent=message;send({kind:'error',message});stop();}
+function setupControl(){
+ controlChannel=pc.createDataChannel('control',{negotiated:true,id:0,ordered:true});
+ moveChannel=pc.createDataChannel('pointer',{negotiated:true,id:1,ordered:false,maxRetransmits:0});
+ const opened=()=>{if(!controlReady&&controlChannel.readyState==='open'&&moveChannel.readyState==='open'){
+  controlReady=true;lastControlSeen=performance.now();send({kind:'control-ready'});
+  heartbeat=setInterval(()=>{if(stopped)return;if(performance.now()-lastControlSeen>5000){fail('WebRTC kontrol baglantisi yanit vermiyor.');return;}if(controlChannel.bufferedAmount>65536){fail('WebRTC kontrol kuyrugu doldu.');return;}controlChannel.send(JSON.stringify({tip:'alive'}));},1000);
+ }};
+ for(const ch of [controlChannel,moveChannel]){ch.onopen=opened;ch.onclose=()=>{if(!stopped)fail('WebRTC kontrol kanali kapandi.');};ch.onerror=()=>{if(!stopped)fail('WebRTC kontrol kanali hatasi.');};
+ ch.onmessage=e=>{try{if(stopped)return;if(typeof e.data!=='string'||e.data.length>4096)throw Error('Gecersiz kontrol paketi.');const data=JSON.parse(e.data);lastControlSeen=performance.now();
+  if(data.tip==='alive'){if(ch!==controlChannel)throw Error('Gecersiz kontrol kanali.');return;}
+  if(data.tip==='girdi'&&config.host){if((data.eylem==='hareket')!==(ch===moveChannel))throw Error('Girdi kanali uyusmuyor.');}
+  else if(data.tip==='kontrol_izni'&&!config.host&&ch===controlChannel){}else throw Error('Kontrol mesaji rolu gecersiz.');
+  send({kind:'data',data});
+ }catch(error){fail(error);}};}
+}
+function sendData(data){
+ if(!controlReady||stopped)throw Error('WebRTC kontrol kanali hazir degil.');
+ const movement=data.tip==='girdi'&&data.eylem==='hareket',channel=movement?moveChannel:controlChannel;
+ if(channel.readyState!=='open')throw Error('WebRTC kontrol kanali acik degil.');
+ if(data.tip==='girdi')data={...data,sira:++dataSequence};
+ const payload=JSON.stringify(data);if(payload.length>4096)throw Error('Kontrol paketi cok buyuk.');
+ if(movement&&channel.bufferedAmount>4096)return;
+ if(!movement&&channel.bufferedAmount>65536)throw Error('WebRTC kontrol kuyrugu doldu.');
+ channel.send(payload);
+}
+function startDeadline(){if(!deadline)deadline=setTimeout(()=>fail('WebRTC 30 saniyede baglanamadi. Aginiz TURN gerektiriyor olabilir; ag ayarlarini kontrol edin.'),30000);}
+function codecs(){const list=RTCRtpSender.getCapabilities('video')?.codecs.filter(c=>c.mimeType.toLowerCase()==='video/h264')||[];if(!list.length)throw Error('Bu WebView2 surumunde H.264 yok. WebView2 Runtime guncelleyin.');return list;}
+function preferH264(t){t.setCodecPreferences(codecs());}
+async function quality(){if(!stream)return;const track=stream.getVideoTracks()[0];await track.applyConstraints({frameRate:{ideal:config.fps,max:config.fps},height:{ideal:config.height,max:config.height},width:{ideal:Math.ceil(config.height*16/9),max:Math.ceil(config.height*16/9)}});const sender=pc.getSenders().find(s=>s.track?.kind==='video');if(sender){const p=sender.getParameters();if(p.encodings?.length){p.encodings[0].maxFramerate=config.fps;delete p.encodings[0].maxBitrate;p.degradationPreference='maintain-resolution';await sender.setParameters(p);}}}
+async function init(value){if(pc)throw Error('WebRTC zaten baslatildi.');config=value;codecs();pc=new RTCPeerConnection({iceServers:config.iceServers,bundlePolicy:'max-bundle'});
+ setupControl();
+ pc.onicecandidate=e=>{if(e.candidate&&!stopped)send({kind:'signal',signal:{type:'candidate',candidate:e.candidate.toJSON()}});};
+ pc.onconnectionstatechange=()=>{if(stopped)return;if(pc.connectionState==='connected'){clearTimeout(deadline);clearTimeout(disconnectDeadline);deadline=null;disconnectDeadline=null;statusText.textContent='H.264 bagli. Goruntu DTLS-SRTP ile sifreli.';if(config.host){share.hidden=true;document.getElementById('help').hidden=true;}send({kind:'connected'});}else if(pc.connectionState==='failed')fail('WebRTC ag baglantisi basarisiz. TURN ayarlarini kontrol edin.');else if(pc.connectionState==='disconnected')fail('WebRTC baglantisi kesildi; kontrol izni kaldirildi.');};
+ pc.ontrack=e=>{if(config.host){fail('Beklenmeyen ters yonlu video.');return;}video.srcObject=new MediaStream([e.track]);video.style.display='block';panel.style.display='none';hint.style.display='block';video.play().catch(fail);};
+ statsTimer=setInterval(updateStats,1000);ready=true;
+ if(config.host){share.hidden=false;document.getElementById('help').hidden=false;statusText.textContent='Paylasimi baslatmak icin birincil ekraninizi secin.';}else statusText.textContent='Karsi tarafin ekran secmesi bekleniyor...';
+ send({kind:'ready'});
+}
+async function publishStream(selected){if(stopped){selected.getTracks().forEach(t=>t.stop());return;}stream=selected;const track=stream.getVideoTracks()[0];track.contentHint='detail';track.onended=()=>{if(!stopped){send({kind:'ended'});stop();}};
+ const transceiver=pc.addTransceiver(track,{direction:'sendonly',streams:[stream]});preferH264(transceiver);await quality();
+ const offer=await pc.createOffer();await pc.setLocalDescription(offer);send({kind:'signal',signal:{type:'offer',sdp:pc.localDescription.sdp}});startDeadline();statusText.textContent='H.264 baglantisi kuruluyor...';
+}
+share.onclick=async()=>{
+ if(!ready||stopped||share.disabled)return;
+ share.disabled=true;let selected;
+ try{
+  selected=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:'monitor',frameRate:{ideal:config.fps,max:config.fps}},audio:false});
+  if(stopped){selected.getTracks().forEach(t=>t.stop());return;}
+  if(selected.getVideoTracks()[0].getSettings().displaySurface!=='monitor')throw Error('Lutfen pencere yerine tum birincil monitoru secin.');
+ }catch(error){
+  if(selected)selected.getTracks().forEach(t=>t.stop());
+  if(stopped)return;
+  share.disabled=false;share.hidden=false;
+  statusText.textContent=error?.name==='NotAllowedError'||error?.name==='AbortError'
+   ? 'Ekran secilmedi. Dugmeye basip tekrar secebilirsiniz.'
+   : 'Ekran secimi acilamadi: '+String(error?.message||error).slice(0,300)+' Tekrar deneyebilirsiniz.';
+  return;
+ }
+ try{await publishStream(selected);}catch(error){fail(error);}
+};
+async function signal(value){if(!pc||stopped)throw Error('WebRTC hazir degil.');if(value.type==='candidate'){if(pc.remoteDescription)await pc.addIceCandidate(value.candidate);else{if(candidates.length>=256)throw Error('Cok fazla ICE adayi.');candidates.push(value.candidate);}return;}
+ if(value.type!==(config.host?'answer':'offer')||pc.remoteDescription)throw Error('Beklenmeyen WebRTC teklifi.');
+ await pc.setRemoteDescription(value);for(const candidate of candidates)await pc.addIceCandidate(candidate);candidates=[];
+ if(!config.host){for(const t of pc.getTransceivers()){t.direction='recvonly';preferH264(t);}await pc.setLocalDescription(await pc.createAnswer());send({kind:'signal',signal:{type:'answer',sdp:pc.localDescription.sdp}});}startDeadline();
+}
+async function updateStats(){if(!pc||stopped||statsBusy)return;statsBusy=true;try{const stats=await pc.getStats();let media=null,relay=false;stats.forEach(s=>{if(s.type===(config.host?'outbound-rtp':'inbound-rtp')&&s.kind==='video'&&!s.isRemote)media=s;if(s.type==='transport'&&s.selectedCandidatePairId){const pair=stats.get(s.selectedCandidatePairId);const local=stats.get(pair?.localCandidateId),remote=stats.get(pair?.remoteCandidateId);relay=local?.candidateType==='relay'||remote?.candidateType==='relay';}});if(!media)return;const codec=stats.get(media.codecId);if(codec&&codec.mimeType.toLowerCase()!=='video/h264')throw Error('H.264 yerine baska codec secildi.');const frames=config.host?media.framesEncoded:media.framesDecoded,bytes=config.host?media.bytesSent:media.bytesReceived;let fps=0,kbps=0;if(previousStats){const seconds=(media.timestamp-previousStats.time)/1000;if(seconds>0){fps=Math.max(0,(frames-previousStats.frames)/seconds);kbps=Math.max(0,(bytes-previousStats.bytes)*8/seconds/1000);}}previousStats={time:media.timestamp,frames,bytes};if(Number.isFinite(fps)&&Number.isFinite(kbps))send({kind:'stats',fps,kbps,relay,codec:codec?.mimeType||'',width:media.frameWidth||0,height:media.frameHeight||0});}catch(error){fail(error);}finally{statsBusy=false;}}
+function input(eylem,extra={}){if(!permission||config?.host||stopped)return;send({kind:'input',input:{eylem,x:0,y:0,dugme:0,basili:false,tus:0,delta:0,...extra}});}
+function pause(){if(inputActive)input('birak');inputActive=false;}
+function point(e){if(!video.videoWidth||!video.videoHeight)return null;const r=video.getBoundingClientRect(),ratio=Math.min(r.width/video.videoWidth,r.height/video.videoHeight);const w=video.videoWidth*ratio,h=video.videoHeight*ratio;const x=(e.clientX-r.left-(r.width-w)/2)/w,y=(e.clientY-r.top-(r.height-h)/2)/h;return x>=0&&x<=1&&y>=0&&y<=1?{x,y}:null;}
+const button=b=>b===0?0:b===2?1:b===1?2:-1;
+video.oncontextmenu=e=>e.preventDefault();
+video.onmousedown=e=>{const p=point(e),b=button(e.button);if(!permission||!p||b<0)return;e.preventDefault();inputActive=true;video.focus();input('dugme',{...p,dugme:b,basili:true});};
+video.onmouseup=e=>{if(!inputActive)return;const p=point(e),b=button(e.button);if(!p||b<0){pause();return;}e.preventDefault();input('dugme',{...p,dugme:b});};
+let lastMove=0;video.onmousemove=e=>{if(!inputActive||performance.now()-lastMove<16)return;const p=point(e);if(p){lastMove=performance.now();input('hareket',p);}};
+video.onmouseleave=pause;window.onblur=pause;
+video.addEventListener('wheel',e=>{const p=point(e);if(inputActive&&p){e.preventDefault();input('tekerlek',{...p,delta:Math.max(-1200,Math.min(1200,Math.round(-e.deltaY)))});}},{passive:false});
+video.onkeydown=e=>{if(!inputActive)return;e.preventDefault();if(e.key==='Escape'){pause();return;}input('tus',{tus:e.keyCode,basili:true});};
+video.onkeyup=e=>{if(inputActive){e.preventDefault();input('tus',{tus:e.keyCode});}};
+window.chrome.webview.addEventListener('message',event=>{operation=operation.then(async()=>{const m=event.data;if(stopped)return;if(m.kind==='init')await init(m);else if(m.kind==='signal')await signal(m.signal);else if(m.kind==='send-data')sendData(m.data);else if(m.kind==='quality'){config.fps=m.fps;config.height=m.height;await quality();}else if(m.kind==='permission'){pause();permission=m.allowed===true;hint.textContent=permission?'Kontrol acik: goruntuye tikla. Esc: duraklat':'Salt goruntuleme';}else if(m.kind==='pause')pause();else if(m.kind==='stop')stop();}).catch(fail);});
+window.addEventListener('beforeunload',stop);
+</script></body></html>

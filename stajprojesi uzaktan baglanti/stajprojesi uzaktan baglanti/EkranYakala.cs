@@ -19,9 +19,10 @@ internal static class EkranYakala
     [DllImport("gdi32.dll")] private static extern int GetDeviceCaps(IntPtr dc, int index);
     [DllImport("gdi32.dll")] private static extern bool BitBlt(IntPtr target, int x, int y, int width, int height, IntPtr source, int sx, int sy, uint operation);
 
-    // Birincil ekran, en fazla 1280 piksel genislik ve JPEG sikistirmasi.
-    public static byte[] Jpeg()
+    // Birincil ekran; secilen sinirlar icinde en-boy orani korunur.
+    public static byte[] Jpeg(int height = 720, int jpegQuality = 60)
     {
+        if (jpegQuality < 15 || jpegQuality > 90) throw new ArgumentOutOfRangeException(nameof(jpegQuality));
         var ekran = GetDC(IntPtr.Zero);
         var bellek = CreateCompatibleDC(ekran);
         var bitmap = IntPtr.Zero;
@@ -37,13 +38,23 @@ internal static class EkranYakala
             if (!BitBlt(bellek, 0, 0, genislik, yukseklik, ekran, 0, 0, 0x40CC0020))
                 throw new InvalidOperationException("Ekran yakalanamadi.");
             BitmapSource kaynak = Imaging.CreateBitmapSourceFromHBitmap(bitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            double oran = Math.Min(1, 1280.0 / genislik);
+            int width = height switch { 480 => 854, 720 => 1280, 1080 => 1920, _ => throw new ArgumentOutOfRangeException(nameof(height)) };
+            double oran = Math.Min(1, Math.Min((double)width / genislik, (double)height / yukseklik));
             if (oran < 1) kaynak = new TransformedBitmap(kaynak, new ScaleTransform(oran, oran));
-            var encoder = new JpegBitmapEncoder { QualityLevel = 60 };
-            encoder.Frames.Add(BitmapFrame.Create(kaynak));
-            using var veri = new MemoryStream();
-            encoder.Save(veri);
-            return veri.ToArray();
+            // Leave room for Base64 and JSON inside the encrypted payload limit.
+            foreach (int quality in new[] { jpegQuality, Math.Max(15, jpegQuality - 15), 15 }.Distinct())
+            {
+                var encoder = new JpegBitmapEncoder { QualityLevel = quality };
+                encoder.Frames.Add(BitmapFrame.Create(kaynak));
+                using var veri = new MemoryStream();
+                try
+                {
+                    encoder.Save(veri);
+                    if (veri.Length <= 1000000) return veri.ToArray();
+                }
+                finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(veri.GetBuffer().AsSpan(0, (int)veri.Length)); }
+            }
+            throw new InvalidOperationException("Goruntu cok buyuk. Daha dusuk cozunurluk secin.");
         }
         finally
         {

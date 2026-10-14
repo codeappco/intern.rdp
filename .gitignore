@@ -7,3 +7,20 @@
 bin/
 obj/
 .test-build/
+
+# Packaged releases and temporary source archive staging
+/artifacts/
+/__source_zip_staging*/
+
+# Test reports and coverage output
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Local environment configuration (keep shareable templates)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template

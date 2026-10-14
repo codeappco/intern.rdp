@@ -23,20 +23,33 @@ public partial class MainWindow
 
     private async void Kontrol_Click(object sender, RoutedEventArgs e)
     {
-        if (!paylasan || oturumId == null) return;
+        if (!secureStarted || !paylasan || oturumId == null) return;
+        if (rtcSession && kontrolIzni.Length == 0 && MessageBox.Show(this,
+            "Windows ekran secicisinde BIRINCIL monitoru sectiginizden emin misiniz? Fare/klavye birincil monitoru kontrol eder.",
+            "Kontrol izni", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
         // Yerel izin hemen kaldirilir; yolda kalan eski girdiler uygulanmaz.
         kontrolIzni = kontrolIzni.Length == 0 ? Guid.NewGuid().ToString() : "";
         uzakGirdi.Release();
         KontrolButton.Content = kontrolIzni.Length > 0 ? "Kontrol iznini kaldir" : "Fare ve klavye kontrolune izin ver";
         DurumText.Text = kontrolIzni.Length > 0 ? "Ekranin paylasiliyor. Fare ve klavye kontrolu acik." : "Ekranin paylasiliyor. Kontrol izni kapali.";
-        try { await MesajGonderAsync(new { tip = "kontrol_izni", oturumId, izin = kontrolIzni }); }
+        try
+        {
+            var permission = new { tip = "kontrol_izni", oturumId, izin = kontrolIzni };
+            if (rtcSession) rtcView?.Post(new { kind = "send-data", data = permission });
+            else await SecureSend(permission);
+        }
         catch (Exception) { await OturumuDurdur(); }
     }
 
     private async Task GirdiGonder(string eylem, double x = 0, double y = 0, int dugme = 0, bool basili = false, int tus = 0, int delta = 0)
     {
-        if (paylasan || oturumId == null || kontrolIzni.Length == 0) return;
-        try { await MesajGonderAsync(new { tip = "girdi", oturumId, izin = kontrolIzni, eylem, x, y, dugme, basili, tus, delta }); }
+        if (!secureStarted || paylasan || oturumId == null || kontrolIzni.Length == 0) return;
+        try
+        {
+            var input = new { tip = "girdi", oturumId, izin = kontrolIzni, eylem, x, y, dugme, basili, tus, delta };
+            if (rtcSession) rtcView?.Post(new { kind = "send-data", data = input });
+            else await SecureSend(input);
+        }
         catch (Exception) { await OturumuDurdur(); }
     }
 
@@ -114,11 +127,12 @@ public partial class MainWindow
 
     private void KontrolMesaji(JsonElement veri)
     {
-        if (oturumId == null || veri.GetProperty("oturumId").GetString() != oturumId) return;
+        if (!secureStarted || oturumId == null || veri.GetProperty("oturumId").GetString() != oturumId) return;
         if (veri.GetProperty("tip").GetString() == "kontrol_izni" && !paylasan)
         {
             kontrolIzni = veri.GetProperty("izin").GetString() ?? "";
             girdiAktif = false;
+            rtcView?.Post(new { kind = "permission", allowed = kontrolIzni.Length > 0 });
             if (ekranPenceresi != null) ekranPenceresi.Title = kontrolIzni.Length > 0
                 ? "RemoteDesk | Kontrol acik: goruntuye tikla. Esc: kontrolu duraklat"
                 : "RemoteDesk | Karsi ekran (salt goruntuleme)";
